@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+
+  <title>Edit profile page - Bootdey.com</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="{%  static '/bootstrap.css'%}" rel="stylesheet" type="text/css">
+  <link href="{% static '/styles.css' %}" rel="stylesheet" type="text/css">
+  
+</head>
+
+<body>
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+  <div class="container bootstrap snippets bootdeys">
+    <div class="row">
+      <div class="col-xs-12 col-sm-9">
+        <form action="/webScraping/processed/" class="form-horizontal" method="post">
+            {% csrf_token %}
+          <div class="panel panel-default">
+            <div class="panel-body text-center">
+              <img src="https://landinginteligente.com/fotos/util/Logos/Logo-soybot.jpg" class="img-circle profile-avatar"
+                alt="User avatar">
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">INFO DEL SPREADSHEET E IMAGEN</h4>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Nombre del Spreadsheet</label>
+                <div class="col-sm-10">
+                  <input name="spreadsheet_name" type="text" class="form-control" value="{{ spreadsheet_name }}" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Extensión de Imagen</label>
+                <div class="col-sm-10">
+                  <input name="image_extension" type="text" class="form-control" value={{ image_extension }} required>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">COLUMNAS DEL SPREADSHEET</h4>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label class="col-sm-2 control-label">N° columna de Nombre</label>
+                <div class="col-sm-10">
+                  <input name="column_number_of_names" type="number" max="20" class="form-control" value={{ column_number_of_names }} required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">N° columna de Imagen</label>
+                <div class="col-sm-10">
+                  <input name="column_number_of_images" type="number" max="20" class="form-control" value={{ column_number_of_images }} required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">N° columna de para Insertar</label>
+                <div class="col-sm-10">
+                  <input name="column_number_to_insert" type="number" max="20" class="form-control" value={{ column_number_to_insert }} required>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">IMAGEN EN PÁGINA WEB</h4>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Etiqueta</label>
+                <div class="col-sm-10">
+                  <input name="tag" type="text" class="form-control" value={{ tag }} required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Clase</label>
+                <div class="col-sm-10">
+                  <input name="class_" type="text" class="form-control" value={{ class_ }} required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Atributo</label>
+                <div class="col-sm-10">
+                  <input name="attribute" type="text" class="form-control" value={{ attribute }} required>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-10 col-sm-offset-2">
+                    <button type="submit" class="btn btn-primary">Aceptar</button>
+                    <button type="reset" class="btn btn-default">Limpiar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script type="text/javascript">
+
+  </script>
+</body>
+
+</html>
