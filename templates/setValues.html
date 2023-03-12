@@ -6,7 +6,7 @@
   <meta charset="utf-8">
 
 
-  <title>Edit profile page - Bootdey.com</title>
+  <title>Setear Valores</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="{%  static 'styles/bootstrap.css' %}" rel="stylesheet" type="text/css">
   <link href="{% static 'styles/styles.css' %}" rel="stylesheet" type="text/css">
@@ -51,6 +51,7 @@
             </div>
             <div class="panel-body">
               <div class="form-group">
+                <abbr title="Si no hay columna de nombres, cargar 0" >*</abbr>.
                 <label class="col-sm-2 control-label">N° columna de Nombre</label>
                 <div class="col-sm-10">
                   <input name="column_number_of_names" type="number" max="20" class="form-control" value={{ column_number_of_names }} required>
