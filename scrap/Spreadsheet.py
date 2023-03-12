@@ -38,11 +38,18 @@ class Spreadsheet:
             return names_list
 
         names_list = sheet.col_values(column)
+        if len(names_list) == 0:
+            raise Exception(f"En la columna {column} no se encuentran valores / imagenes")
         names_list.pop(0)
+
+        if images_amount != len(names_list):
+            raise Exception(f"La cantidad de imagenes ({images_amount}) no coincide con la cantidad de nombres ({len(names_list)})")
         return names_list
 
     def get_images(self, sheet, column):
         images_list = sheet.col_values(column)
+        if len(images_list) == 0:
+            raise Exception(f"En la columna {column} no se encuentran valores / imagenes")
         images_list.pop(0)
         return images_list, len(images_list)
 
