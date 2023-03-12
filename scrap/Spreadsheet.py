@@ -1,4 +1,5 @@
 import gspread
+from gspread import SpreadsheetNotFound, WorksheetNotFound
 from oauth2client.service_account import ServiceAccountCredentials
 
 scopes = [
@@ -9,13 +10,24 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("static/secret_key.json
 
 
 class Spreadsheet:
-    def __init__(self, name):
-        self._name = name
+    def __init__(self):
+        self._spreadsheet = None
+        self._name = None
 
-    def get_first_sheet(self):
+    def get_spreadsheet(self, spreadsheet_name):
         file = gspread.authorize(creds)
-        spreadsheet = file.open(self.name())
-        sheet = spreadsheet.sheet1
+        try:
+            spreadsheet = file.open(spreadsheet_name)
+            self._set_spreadsheet(spreadsheet)
+        except SpreadsheetNotFound:
+            raise Exception(f"No se encontro ningun Spreadsheet con el nombre {self.name()}")
+        return spreadsheet
+
+    def get_sheet(self, sheet_name):
+        try:
+            sheet = self.spreadsheet().worksheet(sheet_name)
+        except WorksheetNotFound:
+            raise Exception(f"No se encontro ninguna hoja con el nombre {sheet_name}")
         return sheet
 
     def get_name_of_images(self, sheet, column, images_amount):
@@ -42,3 +54,12 @@ class Spreadsheet:
 
     def name(self):
         return self._name
+
+    def _set_name(self, name):
+        self._name = name
+
+    def spreadsheet(self):
+        return self._spreadsheet
+
+    def _set_spreadsheet(self, spreadsheet):
+        self._spreadsheet = spreadsheet
