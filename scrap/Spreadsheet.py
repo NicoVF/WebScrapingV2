@@ -10,22 +10,24 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("static/secret_key.json
 
 
 class Spreadsheet:
-    def __init__(self):
-        self._spreadsheet = None
-        self._name = None
+    def __init__(self, spreadsheet_file):
+        self._spreadsheet_file = spreadsheet_file
 
-    def get_spreadsheet(self, spreadsheet_name):
+    def __str__(self):
+        return str(self.spreadsheet_file())
+
+    @classmethod
+    def get_spreadsheet(cls, spreadsheet_name):
         file = gspread.authorize(creds)
         try:
             spreadsheet = file.open(spreadsheet_name)
-            self._set_spreadsheet(spreadsheet)
         except SpreadsheetNotFound:
-            raise Exception(f"No se encontro ningun Spreadsheet con el nombre {self.name()}")
-        return spreadsheet
+            raise Exception(f"No se encontro ningun Spreadsheet con el nombre {spreadsheet_name}")
+        return cls(spreadsheet)
 
     def get_sheet(self, sheet_name):
         try:
-            sheet = self.spreadsheet().worksheet(sheet_name)
+            sheet = self.spreadsheet_file().worksheet(sheet_name)
         except WorksheetNotFound:
             raise Exception(f"No se encontro ninguna hoja con el nombre {sheet_name}")
         return sheet
@@ -43,7 +45,8 @@ class Spreadsheet:
         names_list.pop(0)
 
         if images_amount != len(names_list):
-            raise Exception(f"La cantidad de imagenes ({images_amount}) no coincide con la cantidad de nombres ({len(names_list)})")
+            raise Exception(f"La cantidad de imagenes ({images_amount}) no coincide con la cantidad de nombres "
+                            f"({len(names_list)})")
         return names_list
 
     def get_images(self, sheet, column):
@@ -59,14 +62,5 @@ class Spreadsheet:
         state = sheet.insert_cols(columns_lists, column_number_to_insert)
         return
 
-    def name(self):
-        return self._name
-
-    def _set_name(self, name):
-        self._name = name
-
-    def spreadsheet(self):
-        return self._spreadsheet
-
-    def _set_spreadsheet(self, spreadsheet):
-        self._spreadsheet = spreadsheet
+    def spreadsheet_file(self):
+        return self._spreadsheet_file
