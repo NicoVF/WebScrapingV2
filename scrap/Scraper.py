@@ -1,15 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
-from requests import ConnectTimeout
 
 
 class Scraper:
 
     def get_content_in_lxml(self, url):
-        try:
-            result = requests.get(url)
-        except ConnectTimeout:
-            raise Exception(f"No se pudo acceder a {url}")
+        result = requests.get(url)
         content = result.text
         return BeautifulSoup(content, 'lxml')
 

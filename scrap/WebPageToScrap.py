@@ -1,3 +1,4 @@
+import validators
 
 
 class WebPageToScrap:
@@ -21,3 +22,6 @@ class WebPageToScrap:
 
     def attribute(self):
         return self._attribute
+
+    def check_url(self):
+        return validators.url(self.url())
