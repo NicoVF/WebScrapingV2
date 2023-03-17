@@ -1,6 +1,12 @@
+import ftplib
+import os
+import datetime
 from django.shortcuts import render
 from django.views import generic
 
+import requests
+
+from scrap.Image import Image
 from scrap.Scraper import Scraper
 from scrap.Spreadsheet import Spreadsheet
 from scrap.WebPageToScrap import WebPageToScrap
@@ -55,33 +61,121 @@ class Processed(generic.TemplateView):
         if yes_upload == "True":
             upload_images_to_own_host = True
 
+        current_time = datetime.datetime.now()
+        date_and_time = f"--{current_time.year}-{current_time.month}-{current_time.day}--{current_time.hour}-{current_time.minute}"
+        client_name_and_current_time = client_name + date_and_time
+
+        ftp_host = os.environ['FTP_HOST']
+        ftp_user = os.environ['FTP_USER']
+        ftp_pass = os.environ['FTP_PASS']
+        ftp_path = os.environ['FTP_PATH']
+
+        session = ftplib.FTP(ftp_host, ftp_user, ftp_pass)
+        session.encoding = "utf-8"
+        print(session.nlst(ftp_path))
+        if client_name_and_current_time not in session.nlst(ftp_path):
+            session.cwd(ftp_path)
+            session.mkd(client_name_and_current_time)
+
         spreadsheet = Spreadsheet.get_spreadsheet("Test_WebScraping")
         sheet = spreadsheet.get_sheet("Hoja1")
 
         images_list, images_amount = spreadsheet.get_images(sheet, column_number_of_images)
+        print(images_list)
         names_list = spreadsheet.get_name_of_images(sheet, column_number_of_names, images_amount)
+        # todo gen nombre uuid si es ''
+        print(names_list)
 
         scraper = Scraper()
+        global image
+        for img, name in zip(images_list, names_list):
+            errors_list = []
+            image = None
+            new_url_of_image = os.environ['HOST_PUBLIC_URL']
 
-        # for images in images_list:
-        lista_de_errores = []
-        # GET IMAGES WITH GET SCRAPING
+            web = WebPageToScrap(img, class_=class_, tag=tag, attribute=attribute)
+            result_check_url = web.check_url()
+            is_url_finished_in_image_extension = web.is_direct_image_url()
+
+            if result_check_url is not True:
+                errors_list.append(result_check_url)
+                continue
+
+            if result_check_url is True and is_url_finished_in_image_extension is True:
+                if upload_images_to_own_host is False:
+                    state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                                                       images_list.index(img) + 2, web.url())
+                    if state is not True:
+                        errors_list.append(state)
+
+                if upload_images_to_own_host is True:
+                    extension = web.extension_of_url_image()
+                    data_image = requests.get(web.url()).content
+                    image = Image(name, extension)
+                    image.create_file(data_image)
+                    state = image.send_image_file_for_ftp(client_name_and_current_time, session, ftp_path)
+                    if state is not True:
+                        errors_list.append(state)
 
 
-        #   web = WebPageToScrap(images, class_=class_, tag=tag, attribute=attribute)
-        #   if web.check_url() is True:
-        #       content = scraper.get_content_in_lxml(web.url())
-        #       scrap = scraper.get_scrap(content, web.tag(), web.class_(), web.attribute())
-        #   if web.check_url() is not True:
-        #       lista de errores.append("No se puede acceder a la url")
-        #
 
-        web = WebPageToScrap("http://192.168.1.40:8080/t.html", class_="ImgSrc", tag="img", attribute="src")
-        if web.check_url() is True:
-            scrap = scraper.get_content_in_lxml(web.url())
-            scraper.get_scrap(scrap, web.tag(), web.class_(), web.attribute())
-        # if web.check_url() is not True:
-        #
+            if result_check_url is True and is_url_finished_in_image_extension is False:
+                content = scraper.get_content_in_lxml(web.url())
+                scrap = scraper.get_scrap(content, web.tag(), web.class_(), web.attribute())
+                result_check_access_to_scrap = scraper.check_access_to(scrap)
+                result_is_encoded_image = Image.is_encoded(scrap)
+                is_scraped_url_finished_in_image_extension = scraper.is_direct_image(scrap)
+                if result_check_access_to_scrap is not True:
+                    if result_is_encoded_image[0] is False:
+                        errors_list.append("No se puede identificar el tipo de encode de la imagen")
+                        continue
+                    if result_is_encoded_image[0] is True:
+                        decoded_image = Image.switch_decode(scrap, result_is_encoded_image[1])
+                        if decoded_image is False:
+                            errors_list.append(f"Error al decodificar la imagen en {result_is_encoded_image[1]}")
+                            continue
+                        if decoded_image is not False:
+                            extension = Image.extension_of_decoded_image(scrap, result_is_encoded_image[1])
+                            image = Image(name, extension)
+                            image.create_file(decoded_image)
+                            state = image.send_image_file_for_ftp(client_name_and_current_time, session, ftp_path)
+                            if state is not True:
+                                errors_list.append(state)
+                            new_url_of_image += client_name_and_current_time + "/" + image.name() \
+                                + "." + image.extension()
+                            state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                                                               images_list.index(img) + 2, new_url_of_image)
+                            if state is not True:
+                                errors_list.append(state)
+
+                if result_check_access_to_scrap is True and is_scraped_url_finished_in_image_extension is True:
+                    if upload_images_to_own_host is False:
+                        state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                                                           images_list.index(img) + 2, scrap)
+                        if state is not True:
+                            errors_list.append(state)
+
+                    if upload_images_to_own_host is True:
+                        extension = scraper.extension_of_url_image(scrap)
+                        data_image = requests.get(scrap).content
+                        image = Image(name, extension)
+                        image.create_file(data_image)
+                        state = image.send_image_file_for_ftp(client_name_and_current_time, session, ftp_path)
+                        if state is not True:
+                            errors_list.append(state)
+                        new_url_of_image += client_name_and_current_time + "/" + image.name() \
+                                            + "." + image.extension()
+                        state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                                                           images_list.index(img) + 2, new_url_of_image)
+                        if state is not True:
+                            errors_list.append(state)
+
+            if len(errors_list) > 0:
+                error = print(' | '.join(errors_list))
+                spreadsheet.write_value_in(sheet, column_number_to_insert + 1, images_list.index(img) + 2, error)
+
+        session.quit()
+
 
 
         context = {
