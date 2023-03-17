@@ -53,6 +53,10 @@ class Spreadsheet:
         if images_amount != len(names_list):
             raise Exception(f"La cantidad de imagenes ({images_amount}) no coincide con la cantidad de nombres "
                             f"({len(names_list)})")
+
+
+        #todo gen nombre uuid si es ''
+
         return names_list
 
     def get_images(self, sheet, column):
@@ -62,11 +66,11 @@ class Spreadsheet:
         images_list.pop(0)
         return images_list, len(images_list)
 
-    def write_values_in(self, sheet, column_number_to_insert, values_list):
-        values_list.insert(0, "foto-agencia")
-        columns_lists = [values_list]
-        state = sheet.insert_cols(columns_lists, column_number_to_insert)
-        return
+    def write_value_in(self, sheet, column, row, value):
+        state = str(sheet.update_cell(row, column, value))
+        if state.find(f"'updatedRows': {row}, 'updatedColumns': {column}") != -1:
+            return True
+        return state
 
     def spreadsheet_file(self):
         return self._spreadsheet_file
