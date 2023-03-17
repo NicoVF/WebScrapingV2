@@ -1,5 +1,7 @@
+import re
 import validators
-
+import requests
+from requests import ConnectionError
 
 class WebPageToScrap:
 
@@ -24,4 +26,28 @@ class WebPageToScrap:
         return self._attribute
 
     def check_url(self):
-        return validators.url(self.url())
+        validation_result = validators.url(self.url())
+        if validation_result is not True:
+            return "Url invalida"
+        try:
+            requests.get(self.url())
+            return True
+        except ConnectionError:
+            return "Error de conexion. Web posiblemente caida"
+
+    def is_direct_image_url(self):
+        last_characters_of_url = self._extract_last_5_characters()
+        possible_extensions = [".jpg", ".jpeg", ".png"]
+        if any([x in last_characters_of_url for x in possible_extensions]):
+            return True
+        return False
+
+    def extension_of_url_image(self):
+        last_characters_of_url = self._extract_last_5_characters()
+        extension = re.search("(jpg|jpeg|png)", last_characters_of_url)
+        return extension[0]
+
+    def _extract_last_5_characters(self):
+        len_url = len(self.url())
+        last_characters_of_url = self.url()[len_url - 5:]
+        return last_characters_of_url
