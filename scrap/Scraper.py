@@ -2,7 +2,7 @@ import re
 import requests
 import validators
 from bs4 import BeautifulSoup
-from requests import ConnectionError
+from requests import ConnectionError, ReadTimeout
 
 
 class Scraper:
@@ -13,34 +13,39 @@ class Scraper:
         return BeautifulSoup(content, 'lxml')
 
     def get_scrap(self, content, tag, class_, attribute=None, image_number=0):
+        scrap = None
+        error = None
         all_tags_with_class = content.find_all(tag, class_=class_)
         if len(all_tags_with_class) == 0:
-            raise Exception(f"No se encontro ningun tag {tag} de clase {class_}")
+            error = f"No se encontro ningun tag {tag} de clase {class_}"
+            return scrap, error
         scrap = all_tags_with_class[image_number].get(attribute)
         if scrap is None:
-            raise Exception(f"Se encontraron elementos con el tag {tag} y clase {class_},"
-                   f" pero no el atributo {attribute} en la imagen {image_number + 1}")
-        return scrap
+            error = f"Se encontraron elementos con el tag {tag} y clase {class_} " \
+                   f"pero no el atributo {attribute} en la imagen {image_number + 1}"
+        return scrap, error
 
     def check_access_to(self, url):
         try:
-            requests.get(url)
+            requests.get(url, timeout=7)
             return True
         except ConnectionError:
             return "Error de conexion. Url de imagen obtenida posiblemente caida o invalida"
+        except ReadTimeout:
+            return "Error de conexion. Se tarda mas de 7 seg al cargar la url de imagen obtenida"
         except Exception:
             return False
 
     def is_direct_image(self, url):
         last_characters_of_url = self._extract_last_5_characters_of(url)
-        possible_extensions = [".jpg", ".jpeg", ".png"]
+        possible_extensions = [".jpg", ".jpeg", ".png", ".webp"]
         if any([x in last_characters_of_url for x in possible_extensions]):
             return True
         return False
 
     def extension_of_url_image(self, url):
         last_characters_of_url = self._extract_last_5_characters_of(url)
-        extension = re.search("(jpg|jpeg|png)", last_characters_of_url)
+        extension = re.search("(jpg|jpeg|png|webp)", last_characters_of_url)
         return extension[0]
 
     def _extract_last_5_characters_of(self, url):
