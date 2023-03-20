@@ -45,7 +45,7 @@ class Processed(generic.TemplateView):
     template_name = "processed.html"
 
     def post(self, request, *args, **kwargs):
-        client_name = request.POST["client_name"].lower()
+        client_name = request.POST["client_name"].lower().replace(" ", "-")
         spreadsheet_name = request.POST["spreadsheet_name"]
         sheet_name = request.POST["sheet_name"]
         yes_upload = request.POST.get("yes_upload")
@@ -62,7 +62,7 @@ class Processed(generic.TemplateView):
             upload_images_to_own_host = True
 
         current_time = datetime.datetime.now()
-        date_and_time = f"--{current_time.year}-{current_time.month}-{current_time.day}--{current_time.hour}-{current_time.minute}"
+        date_and_time = f"--{current_time.year}-{current_time.month}-{current_time.day}--{current_time.hour}-{current_time.minute}-{current_time.second}"
         client_name_and_current_time = client_name + date_and_time
 
         ftp_host = os.environ['FTP_HOST']
@@ -72,10 +72,8 @@ class Processed(generic.TemplateView):
 
         session = ftplib.FTP(ftp_host, ftp_user, ftp_pass)
         session.encoding = "utf-8"
-        print(session.nlst(ftp_path))
-        if client_name_and_current_time not in session.nlst(ftp_path):
-            session.cwd(ftp_path)
-            session.mkd(client_name_and_current_time)
+        session.cwd(ftp_path)
+        session.mkd(client_name_and_current_time)
 
         spreadsheet = Spreadsheet.get_spreadsheet("Test_WebScraping")
         sheet = spreadsheet.get_sheet("Hoja1")
@@ -83,11 +81,16 @@ class Processed(generic.TemplateView):
         images_list, images_amount = spreadsheet.get_images(sheet, column_number_of_images)
         print(images_list)
         names_list = spreadsheet.get_name_of_images(sheet, column_number_of_names, images_amount)
-        # todo gen nombre uuid si es ''
         print(names_list)
 
         scraper = Scraper()
         global image
+
+        header_of_images = [['foto-agencia']]
+        header_of_errors = [['ERRORES']]
+        sheet.insert_cols(header_of_images, column_number_to_insert)
+        sheet.insert_cols(header_of_errors, column_number_to_insert + 1)
+
         for img, name in zip(images_list, names_list):
             errors_list = []
             image = None
@@ -96,14 +99,17 @@ class Processed(generic.TemplateView):
             web = WebPageToScrap(img, class_=class_, tag=tag, attribute=attribute)
             result_check_url = web.check_url()
             is_url_finished_in_image_extension = web.is_direct_image_url()
-
             if result_check_url is not True:
                 errors_list.append(result_check_url)
+                if len(errors_list) > 0:
+                    error = ' | '.join(errors_list)
+                    spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1, images_list.index(img) + 2,
+                                               error)
                 continue
 
             if result_check_url is True and is_url_finished_in_image_extension is True:
                 if upload_images_to_own_host is False:
-                    state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                    state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
                                                        images_list.index(img) + 2, web.url())
                     if state is not True:
                         errors_list.append(state)
@@ -111,28 +117,51 @@ class Processed(generic.TemplateView):
                 if upload_images_to_own_host is True:
                     extension = web.extension_of_url_image()
                     data_image = requests.get(web.url()).content
+                    print(name)
                     image = Image(name, extension)
                     image.create_file(data_image)
                     state = image.send_image_file_for_ftp(client_name_and_current_time, session, ftp_path)
+                    print(state)
+                    if state is not True:
+                        errors_list.append(state)
+                    new_url_of_image += client_name_and_current_time + "/" + image.name() \
+                                        + "." + image.extension()
+                    print(images_list.index(img))
+                    state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
+                                                       images_list.index(img) + 2, new_url_of_image)
                     if state is not True:
                         errors_list.append(state)
 
-
-
             if result_check_url is True and is_url_finished_in_image_extension is False:
                 content = scraper.get_content_in_lxml(web.url())
-                scrap = scraper.get_scrap(content, web.tag(), web.class_(), web.attribute())
+                scrap, error = scraper.get_scrap(content, web.tag(), web.class_(), web.attribute())
+                print(scrap)
+                if error is not None:
+                    errors_list.append(error)
+                    if len(errors_list) > 0:
+                        error = ' | '.join(errors_list)
+                        spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1,
+                                                   images_list.index(img) + 2, error)
+                    continue
                 result_check_access_to_scrap = scraper.check_access_to(scrap)
                 result_is_encoded_image = Image.is_encoded(scrap)
                 is_scraped_url_finished_in_image_extension = scraper.is_direct_image(scrap)
                 if result_check_access_to_scrap is not True:
                     if result_is_encoded_image[0] is False:
                         errors_list.append("No se puede identificar el tipo de encode de la imagen")
+                        if len(errors_list) > 0:
+                            error = ' | '.join(errors_list)
+                            spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1,
+                                                       images_list.index(img) + 2, error)
                         continue
                     if result_is_encoded_image[0] is True:
                         decoded_image = Image.switch_decode(scrap, result_is_encoded_image[1])
                         if decoded_image is False:
                             errors_list.append(f"Error al decodificar la imagen en {result_is_encoded_image[1]}")
+                            if len(errors_list) > 0:
+                                error = ' | '.join(errors_list)
+                                spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1,
+                                                           images_list.index(img) + 2, error)
                             continue
                         if decoded_image is not False:
                             extension = Image.extension_of_decoded_image(scrap, result_is_encoded_image[1])
@@ -143,14 +172,14 @@ class Processed(generic.TemplateView):
                                 errors_list.append(state)
                             new_url_of_image += client_name_and_current_time + "/" + image.name() \
                                 + "." + image.extension()
-                            state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                            state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
                                                                images_list.index(img) + 2, new_url_of_image)
                             if state is not True:
                                 errors_list.append(state)
 
                 if result_check_access_to_scrap is True and is_scraped_url_finished_in_image_extension is True:
                     if upload_images_to_own_host is False:
-                        state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                        state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
                                                            images_list.index(img) + 2, scrap)
                         if state is not True:
                             errors_list.append(state)
@@ -165,17 +194,24 @@ class Processed(generic.TemplateView):
                             errors_list.append(state)
                         new_url_of_image += client_name_and_current_time + "/" + image.name() \
                                             + "." + image.extension()
-                        state = spreadsheet.write_value_in(sheet, column_number_to_insert,
+                        state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
                                                            images_list.index(img) + 2, new_url_of_image)
                         if state is not True:
                             errors_list.append(state)
 
             if len(errors_list) > 0:
-                error = print(' | '.join(errors_list))
-                spreadsheet.write_value_in(sheet, column_number_to_insert + 1, images_list.index(img) + 2, error)
+                error = ' | '.join(errors_list)
+                spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1, images_list.index(img) + 2, error)
 
-        session.quit()
+        try:
+            session.quit()
+        except ftplib.error_temp:
+            pass
 
+        file_list = os.listdir("scrap/images")
+        if len(file_list) > 0:
+            for file in file_list:
+                os.remove(f"scrap/images/{file}")
 
 
         context = {
