@@ -8,6 +8,7 @@ class Image:
     def __init__(self, name, extension):
         self._name = name
         self._extension = extension
+        self.if_is_webp_covert_to_jpg()
 
     @classmethod
     def is_encoded(cls, encoded_image):
@@ -51,4 +52,13 @@ class Image:
 
     def extension(self):
         return self._extension
+
+    def if_is_webp_covert_to_jpg(self):
+        if self.extension() == "webp":
+            self._set_jpg_extension()
+        return
+
+    def _set_jpg_extension(self):
+        self._extension = "jpg"
+
 

@@ -79,9 +79,7 @@ class Processed(generic.TemplateView):
         sheet = spreadsheet.get_sheet("Hoja1")
 
         images_list, images_amount = spreadsheet.get_images(sheet, column_number_of_images)
-        print(images_list)
         names_list = spreadsheet.get_name_of_images(sheet, column_number_of_names, images_amount)
-        print(names_list)
 
         scraper = Scraper()
         global image
@@ -117,16 +115,13 @@ class Processed(generic.TemplateView):
                 if upload_images_to_own_host is True:
                     extension = web.extension_of_url_image()
                     data_image = requests.get(web.url()).content
-                    print(name)
                     image = Image(name, extension)
                     image.create_file(data_image)
                     state = image.send_image_file_for_ftp(client_name_and_current_time, session, ftp_path)
-                    print(state)
                     if state is not True:
                         errors_list.append(state)
                     new_url_of_image += client_name_and_current_time + "/" + image.name() \
                                         + "." + image.extension()
-                    print(images_list.index(img))
                     state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
                                                        images_list.index(img) + 2, new_url_of_image)
                     if state is not True:
@@ -135,7 +130,6 @@ class Processed(generic.TemplateView):
             if result_check_url is True and is_url_finished_in_image_extension is False:
                 content = scraper.get_content_in_lxml(web.url())
                 scrap, error = scraper.get_scrap(content, web.tag(), web.class_(), web.attribute())
-                print(scrap)
                 if error is not None:
                     errors_list.append(error)
                     if len(errors_list) > 0:
