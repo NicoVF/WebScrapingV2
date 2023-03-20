@@ -1,3 +1,5 @@
+import uuid
+
 import gspread
 from gspread import SpreadsheetNotFound, WorksheetNotFound
 from oauth2client.service_account import ServiceAccountCredentials
@@ -54,8 +56,7 @@ class Spreadsheet:
             raise Exception(f"La cantidad de imagenes ({images_amount}) no coincide con la cantidad de nombres "
                             f"({len(names_list)})")
 
-
-        #todo gen nombre uuid si es ''
+        names_list = [str(uuid.uuid4()) if name == "" else name for name in names_list]
 
         return names_list
 
@@ -66,9 +67,10 @@ class Spreadsheet:
         images_list.pop(0)
         return images_list, len(images_list)
 
-    def write_value_in(self, sheet, column, row, value):
+    def write_value_in(self, sheet, sheet_name, column, row, value):
         state = str(sheet.update_cell(row, column, value))
-        if state.find(f"'updatedRows': {row}, 'updatedColumns': {column}") != -1:
+        print(state)
+        if state.find(f"'updatedRange': '{sheet_name}!{chr(64+column)}{row}'") != -1:
             return True
         return state
 
