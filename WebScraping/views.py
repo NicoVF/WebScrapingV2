@@ -75,8 +75,8 @@ class Processed(generic.TemplateView):
         session.cwd(ftp_path)
         session.mkd(client_name_and_current_time)
 
-        spreadsheet = Spreadsheet.get_spreadsheet("Test_WebScraping")
-        sheet = spreadsheet.get_sheet("Hoja1")
+        spreadsheet = Spreadsheet.get_spreadsheet(spreadsheet_name)
+        sheet = spreadsheet.get_sheet(sheet_name)
 
         images_list, images_amount = spreadsheet.get_images(sheet, column_number_of_images)
         names_list = spreadsheet.get_name_of_images(sheet, column_number_of_names, images_amount)
@@ -101,13 +101,13 @@ class Processed(generic.TemplateView):
                 errors_list.append(result_check_url)
                 if len(errors_list) > 0:
                     error = ' | '.join(errors_list)
-                    spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1, images_list.index(img) + 2,
+                    spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1, images_list.index(img) + 2,
                                                error)
                 continue
 
             if result_check_url is True and is_url_finished_in_image_extension is True:
                 if upload_images_to_own_host is False:
-                    state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
+                    state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
                                                        images_list.index(img) + 2, web.url())
                     if state is not True:
                         errors_list.append(state)
@@ -122,7 +122,7 @@ class Processed(generic.TemplateView):
                         errors_list.append(state)
                     new_url_of_image += client_name_and_current_time + "/" + image.name() \
                                         + "." + image.extension()
-                    state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
+                    state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
                                                        images_list.index(img) + 2, new_url_of_image)
                     if state is not True:
                         errors_list.append(state)
@@ -134,7 +134,7 @@ class Processed(generic.TemplateView):
                     errors_list.append(error)
                     if len(errors_list) > 0:
                         error = ' | '.join(errors_list)
-                        spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1,
+                        spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1,
                                                    images_list.index(img) + 2, error)
                     continue
                 result_check_access_to_scrap = scraper.check_access_to(scrap)
@@ -145,7 +145,7 @@ class Processed(generic.TemplateView):
                         errors_list.append("No se puede identificar el tipo de encode de la imagen")
                         if len(errors_list) > 0:
                             error = ' | '.join(errors_list)
-                            spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1,
+                            spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1,
                                                        images_list.index(img) + 2, error)
                         continue
                     if result_is_encoded_image[0] is True:
@@ -154,7 +154,7 @@ class Processed(generic.TemplateView):
                             errors_list.append(f"Error al decodificar la imagen en {result_is_encoded_image[1]}")
                             if len(errors_list) > 0:
                                 error = ' | '.join(errors_list)
-                                spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1,
+                                spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1,
                                                            images_list.index(img) + 2, error)
                             continue
                         if decoded_image is not False:
@@ -166,14 +166,14 @@ class Processed(generic.TemplateView):
                                 errors_list.append(state)
                             new_url_of_image += client_name_and_current_time + "/" + image.name() \
                                 + "." + image.extension()
-                            state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
+                            state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
                                                                images_list.index(img) + 2, new_url_of_image)
                             if state is not True:
                                 errors_list.append(state)
 
                 if result_check_access_to_scrap is True and is_scraped_url_finished_in_image_extension is True:
                     if upload_images_to_own_host is False:
-                        state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
+                        state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
                                                            images_list.index(img) + 2, scrap)
                         if state is not True:
                             errors_list.append(state)
@@ -188,14 +188,14 @@ class Processed(generic.TemplateView):
                             errors_list.append(state)
                         new_url_of_image += client_name_and_current_time + "/" + image.name() \
                                             + "." + image.extension()
-                        state = spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert,
+                        state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
                                                            images_list.index(img) + 2, new_url_of_image)
                         if state is not True:
                             errors_list.append(state)
 
             if len(errors_list) > 0:
                 error = ' | '.join(errors_list)
-                spreadsheet.write_value_in(sheet, "Hoja1", column_number_to_insert + 1, images_list.index(img) + 2, error)
+                spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1, images_list.index(img) + 2, error)
 
         try:
             session.quit()
