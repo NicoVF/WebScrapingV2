@@ -25,7 +25,7 @@ class SetValues(generic.TemplateView):
         column_number_of_images = 9
         column_number_to_insert = 10
         tag = "img"
-        class_ = "ImgSrc"
+        # class_ = "ImgSrc"
         attribute = "src"
 
         context = {
@@ -35,7 +35,7 @@ class SetValues(generic.TemplateView):
             'column_number_of_images': column_number_of_images,
             'column_number_to_insert': column_number_to_insert,
             'tag': tag,
-            'class_': class_,
+            # 'class_': class_,
             'attribute': attribute
         }
         return render(request, self.template_name, context)
