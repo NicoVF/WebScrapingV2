@@ -69,7 +69,8 @@ class Spreadsheet:
 
     def write_value_in(self, sheet, sheet_name, column, row, value):
         state = str(sheet.update_cell(row, column, value))
-        if state.find(f"'updatedRange': '{sheet_name}!{chr(64+column)}{row}'") != -1:
+        if state.find(f"'updatedRange': '{sheet_name}!{chr(64 + column)}{row}'") != -1 \
+                or state.find(f"'updatedRange': \"'{sheet_name}'!{chr(64 + column)}{row}\"") != -1:
             return True
         return state
 
