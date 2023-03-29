@@ -38,7 +38,7 @@ class Spreadsheet:
         if column == 0:
             names_list = []
             for image in range(images_amount):
-                names_list.append(image + 1)
+                names_list.append(str(uuid.uuid4()))
             return names_list
 
         names_list = sheet.col_values(column)
