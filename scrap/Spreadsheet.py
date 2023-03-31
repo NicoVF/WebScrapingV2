@@ -46,6 +46,8 @@ class Spreadsheet:
             raise Exception(f"En la columna {column} no se encuentran valores / imagenes")
         names_list.pop(0)
 
+        names_list = [str(uuid.uuid4()) if name == "" else name for name in names_list]
+
         duplicados = [name for name in names_list if names_list.count(name) > 1]
         if len(duplicados) > 0:
             duplicados = list(set(duplicados))
@@ -56,7 +58,6 @@ class Spreadsheet:
             raise Exception(f"La cantidad de imagenes ({images_amount}) no coincide con la cantidad de nombres "
                             f"({len(names_list)})")
 
-        names_list = [str(uuid.uuid4()) if name == "" else name for name in names_list]
 
         return names_list
 
