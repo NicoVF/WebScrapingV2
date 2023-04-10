@@ -38,13 +38,16 @@ class WebPageToScrap:
         except ReadTimeout:
             return "Error de conexion. Se tarda mas de 7 seg al cargar la web"
 
-
     def is_direct_image_url(self):
         last_characters_of_url = self._extract_last_5_characters()
         possible_extensions = [".jpg", ".jpeg", ".png", ".webp"]
         if any([x in last_characters_of_url for x in possible_extensions]):
             return True
         return False
+
+    def is_google_drive_url(self):
+        start_google_drive_url = "drive.google.com/file/"
+        return start_google_drive_url in self.url()
 
     def extension_of_url_image(self):
         last_characters_of_url = self._extract_last_5_characters()

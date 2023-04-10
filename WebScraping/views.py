@@ -11,6 +11,7 @@ from scrap.Scraper import Scraper
 from scrap.Spreadsheet import Spreadsheet
 from scrap.WebPageToScrap import WebPageToScrap
 
+
 # Create your views here.
 
 
@@ -97,12 +98,47 @@ class Processed(generic.TemplateView):
             web = WebPageToScrap(img, class_=class_, tag=tag, attribute=attribute)
             result_check_url = web.check_url()
             is_url_finished_in_image_extension = web.is_direct_image_url()
+            is_google_drive_url = web.is_google_drive_url()
             if result_check_url is not True:
                 errors_list.append(result_check_url)
                 if len(errors_list) > 0:
                     error = ' | '.join(errors_list)
-                    spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1, images_list.index(img) + 2,
+                    spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1,
+                                               images_list.index(img) + 2,
                                                error)
+                continue
+
+            if result_check_url is True and is_google_drive_url is True:
+                if upload_images_to_own_host is False:
+                    state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
+                                                       images_list.index(img) + 2, web.url())
+                    if state is not True:
+                        errors_list.append(state)
+
+                if upload_images_to_own_host is True:
+                    extension = "jpg"
+                    image = Image(name, extension)
+                    state = image.create_file_from_shared_link(web.url())
+                    if state is not True:
+                        errors_list.append(state)
+                        error = ' | '.join(errors_list)
+                        spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1,
+                                                   images_list.index(img) + 2, error)
+                        continue
+                    state = image.send_image_file_for_ftp(client_name_and_current_time, session, ftp_path)
+                    if state is not True:
+                        errors_list.append(state)
+                    new_url_of_image += client_name_and_current_time + "/" + image.name() \
+                                        + "." + image.extension()
+                    state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
+                                                       images_list.index(img) + 2, new_url_of_image)
+                    if state is not True:
+                        errors_list.append(state)
+                if len(errors_list) > 0:
+                    error = ' | '.join(errors_list)
+                    spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1,
+                                               images_list.index(img) + 2, error)
+
                 continue
 
             if result_check_url is True and is_url_finished_in_image_extension is True:
@@ -165,7 +201,7 @@ class Processed(generic.TemplateView):
                             if state is not True:
                                 errors_list.append(state)
                             new_url_of_image += client_name_and_current_time + "/" + image.name() \
-                                + "." + image.extension()
+                                                + "." + image.extension()
                             state = spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert,
                                                                images_list.index(img) + 2, new_url_of_image)
                             if state is not True:
@@ -195,7 +231,8 @@ class Processed(generic.TemplateView):
 
             if len(errors_list) > 0:
                 error = ' | '.join(errors_list)
-                spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1, images_list.index(img) + 2, error)
+                spreadsheet.write_value_in(sheet, sheet_name, column_number_to_insert + 1, images_list.index(img) + 2,
+                                           error)
 
         try:
             session.quit()
@@ -206,7 +243,6 @@ class Processed(generic.TemplateView):
         if len(file_list) > 0:
             for file in file_list:
                 os.remove(f"scrap/images/{file}")
-
 
         context = {
             'client_name': client_name,

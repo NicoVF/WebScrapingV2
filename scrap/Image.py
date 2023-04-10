@@ -1,6 +1,8 @@
 import base64
 import binascii
 import re
+import gdown
+import os
 
 
 class Image:
@@ -39,6 +41,15 @@ class Image:
         file.write(data_image)
         file.close()
 
+    def create_file_from_shared_link(self, url):
+        output_path = f"{self.name()}.{self.extension()}"
+        gdown.download(url, output_path, quiet=False, fuzzy=True)
+        try:
+            self._move_file_from_root_to_scrap_images()
+            return True
+        except Exception:
+            return "No se pudo descargar la imagen de Google Drive desde el link publico"
+
     def send_image_file_for_ftp(self, client_name_and_current_time, session, ftp_path):
         file = open(f"scrap/images/{self.name()}.{self.extension()}", 'rb')
         state = session.storbinary(f"STOR {ftp_path}/{client_name_and_current_time}/{self.name()}.{self.extension()}", file)
@@ -61,4 +72,5 @@ class Image:
     def _set_jpg_extension(self):
         self._extension = "jpg"
 
-
+    def _move_file_from_root_to_scrap_images(self):
+        os.rename(f"{self.name()}.{self.extension()}", f"scrap/images/{self.name()}.{self.extension()}")
