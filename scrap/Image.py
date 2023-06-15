@@ -65,7 +65,7 @@ class Image:
         return self._extension
 
     def if_is_webp_covert_to_jpg(self):
-        if self.extension() == "webp":
+        if self.extension() == "webp" or self.extension() == "jfif":
             self._set_jpg_extension()
         return
 

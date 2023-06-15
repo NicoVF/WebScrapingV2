@@ -40,7 +40,7 @@ class WebPageToScrap:
 
     def is_direct_image_url(self):
         last_characters_of_url = self._extract_last_5_characters()
-        possible_extensions = [".jpg", ".jpeg", ".png", ".webp"]
+        possible_extensions = [".jpg", ".jpeg", ".png", ".webp", ".jfif"]
         if any([x in last_characters_of_url for x in possible_extensions]):
             return True
         return False
@@ -51,10 +51,10 @@ class WebPageToScrap:
 
     def extension_of_url_image(self):
         last_characters_of_url = self._extract_last_5_characters()
-        extension = re.search("(jpg|jpeg|png|webp)", last_characters_of_url)
+        extension = re.search("(jpg|jpeg|png|webp|jfif)", last_characters_of_url)
         return extension[0]
 
     def _extract_last_5_characters(self):
         len_url = len(self.url())
         last_characters_of_url = self.url()[len_url - 5:]
-        return last_characters_of_url
+        return last_characters_of_url.lower()

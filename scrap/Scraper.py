@@ -38,14 +38,14 @@ class Scraper:
 
     def is_direct_image(self, url):
         last_characters_of_url = self._extract_last_5_characters_of(url)
-        possible_extensions = [".jpg", ".jpeg", ".png", ".webp"]
+        possible_extensions = [".jpg", ".jpeg", ".png", ".webp", ".jfif"]
         if any([x in last_characters_of_url for x in possible_extensions]):
             return True
         return False
 
     def extension_of_url_image(self, url):
         last_characters_of_url = self._extract_last_5_characters_of(url)
-        extension = re.search("(jpg|jpeg|png|webp)", last_characters_of_url)
+        extension = re.search("(jpg|jpeg|png|webp|jfif)", last_characters_of_url)
         return extension[0]
 
     def _extract_last_5_characters_of(self, url):
