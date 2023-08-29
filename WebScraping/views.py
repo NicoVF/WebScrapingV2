@@ -257,3 +257,9 @@ class Processed(generic.TemplateView):
             'attribute': attribute
         }
         return render(request, self.template_name, context)
+
+class SetValuesAcara(generic.TemplateView):
+    template_name = "setValuesAcara.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
