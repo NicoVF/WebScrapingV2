@@ -263,3 +263,12 @@ class SetValuesAcara(generic.TemplateView):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+
+
+class ProcessedAcara(generic.TemplateView):
+    template_name = "processedAcara.html"
+
+    
+
+    def post(self, request, *args, **kwargs):
+        return render(request, self.template_name)
