@@ -6,6 +6,7 @@ from django.views import generic
 
 import requests
 
+from scrap.AcaraManager import AcaraManager
 from scrap.Image import Image
 from scrap.Scraper import Scraper
 from scrap.Spreadsheet import Spreadsheet
@@ -258,6 +259,7 @@ class Processed(generic.TemplateView):
         }
         return render(request, self.template_name, context)
 
+
 class SetValuesAcara(generic.TemplateView):
     template_name = "setValuesAcara.html"
 
@@ -268,7 +270,14 @@ class SetValuesAcara(generic.TemplateView):
 class ProcessedAcara(generic.TemplateView):
     template_name = "processedAcara.html"
 
-    
-
     def post(self, request, *args, **kwargs):
-        return render(request, self.template_name)
+        spreadsheet_name = request.POST["spreadsheet_name"]
+        sheet_name = request.POST["sheet_name"]
+
+        acara = AcaraManager(spreadsheet_name, sheet_name)
+        result = acara.scrap()
+
+        info = {
+            'errors': result.errors
+        }
+        return render(request, self.template_name, info)
