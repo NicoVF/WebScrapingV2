@@ -25,6 +25,15 @@ class Scraper:
                    f"pero no el atributo {attribute} en la imagen {image_number + 1}"
         return scrap, error
 
+    def get_scrap_list_of_texts(self, content, tag, class_, after_number_element=0, before_number_last_element=0,
+                                after_element=None):
+        all_tags_with_class = content.find_all(tag, class_=class_)
+        scrap = [word.text for word in all_tags_with_class]
+        scrap = [word.strip() for word in scrap]
+        if after_element:
+            scrap = scrap[scrap.index(f'{after_element}') + 1:]
+        return scrap[after_number_element:len(scrap) - before_number_last_element]
+
     def check_access_to(self, url):
         try:
             requests.get(url, timeout=7)
@@ -52,4 +61,3 @@ class Scraper:
         len_url = len(url)
         last_characters_of_url = url[len_url - 5:]
         return last_characters_of_url
-
