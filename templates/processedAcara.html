@@ -6,6 +6,13 @@
     <link rel="icon" href="https://landinginteligente.com/fotos/util/Logos/Logo-soybot.jpg">
 </head>
 <body>
-<p>OK!</p>
+{% if errors %}
+<p>ERRORES:</p>
+    {% for error in errors %}
+    <li>{{ error }}</li>
+{% endfor %}
+    {% else %}
+    <p>OK!</p>
+{% endif %}
 </body>
 </html>
